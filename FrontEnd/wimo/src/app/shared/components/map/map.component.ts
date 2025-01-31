@@ -14,75 +14,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   private map: any; // Déclare une carte de type `any` pour le moment
   private cars: Car[] = []; // Tableau pour stocker les voitures récupérées du service
 
-  // Voitures fictives
-  private fictiveCars: Car[] = [
-    {
-      id: 1,
-      app: "WimoApp",
-      brand: "Tesla",
-      model: "Model X",
-      year: 2022,
-      plate: "ABC1234",
-      lat: 43.6050,
-      lon: 1.4440,
-      maxLat: 43.6100,
-      minLat: 43.6000,
-      maxLon: 1.4500,
-      minLon: 1.4400,
-      maxSpeed: 250,
-      speed: 120,
-      acceleration: 3.2,
-      mileage: 15000,
-      createdAt: "2022-05-12T12:34:56",
-      updatedAt: "2023-01-01T15:22:10",
-      createdAtRelous: 1652364896,
-      updatedAtRelous: 1672573130
-    },
-    {
-      id: 2,
-      app: "WimoApp",
-      brand: "Ford",
-      model: "Mustang",
-      year: 2021,
-      plate: "XYZ5678",
-      lat: 43.6070,
-      lon: 1.4450,
-      maxLat: 43.6120,
-      minLat: 43.6000,
-      maxLon: 1.4500,
-      minLon: 1.4400,
-      maxSpeed: 200,
-      speed: 150,
-      acceleration: 4.5,
-      mileage: 10000,
-      createdAt: "2021-07-18T10:12:30",
-      updatedAt: "2023-01-15T14:45:10",
-      createdAtRelous: 1626600750,
-      updatedAtRelous: 1673796310
-    },
-    {
-      id: 3,
-      app: "WimoApp",
-      brand: "BMW",
-      model: "i8",
-      year: 2020,
-      plate: "LMN7890",
-      lat: 43.6100,
-      lon: 1.4460,
-      maxLat: 43.6150,
-      minLat: 43.6000,
-      maxLon: 1.4550,
-      minLon: 1.4400,
-      maxSpeed: 250,
-      speed: 130,
-      acceleration: 3.1,
-      mileage: 8000,
-      createdAt: "2020-08-22T14:50:10",
-      updatedAt: "2023-02-10T16:15:30",
-      createdAtRelous: 1598109010,
-      updatedAtRelous: 1676033730
-    }
-  ];
+  private carMarkers: any[] = []; // Tableau pour stocker les marqueurs des voitures réelles
 
   constructor(@Inject(PLATFORM_ID) private platformId: Object, private carsService: CarsService) {}
 
@@ -100,40 +32,49 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
         // Charger les voitures après l'initialisation de la carte
         this.loadCars(L);
+
+        // Mettre à jour les positions des voitures réelles toutes les 20 secondes
+        setInterval(() => this.updateRealCars(L), 20000); // 20 secondes
       }).catch((error) => {
         console.error("Error loading Leaflet:", error);
       });
     }
   }
-/*
+
   loadCars(L: any): void {
-    // Ajouter les voitures fictives dans le tableau des voitures
-    this.cars.push(...this.fictiveCars);
-
-    // Ajouter des marqueurs pour toutes les voitures
-    this.addCarMarkers(L);
+    // Récupérer toutes les voitures depuis le service
+    this.carsService.getAllCars().subscribe(
+      (data: Car[]) => {
+        this.cars = data;
+        this.addCarMarkers(L); // Ajouter les marqueurs une fois les voitures chargées
+      },
+      (error) => {
+        console.error('Erreur lors du chargement des voitures:', error);
+      }
+    );
   }
-*/
-
-loadCars(L: any): void {
-// Récupérer toutes les voitures depuis le service
-this.carsService.getAllCars().subscribe(
-(data: Car[]) => {
-this.cars = data;
-this.addCarMarkers(L); // Ajouter les marqueurs une fois les voitures chargées
-},
-(error) => {
-console.error('Erreur lors du chargement des voitures:', error);
-}
-);
-}
-
 
   addCarMarkers(L: any): void {
-    // Ajouter des marqueurs pour chaque voiture sur la carte
+    // Ajouter des marqueurs pour chaque voiture réelle
     this.cars.forEach(car => {
       const carMarker = L.marker([car.lat, car.lon]).addTo(this.map);
       carMarker.bindPopup(`<b>${car.brand} ${car.model}</b><br>Speed: ${car.speed} km/h<br>Plate: ${car.plate}`);
+      this.carMarkers.push(carMarker); // Ajouter le marqueur à la liste
+    });
+  }
+
+  // Met à jour la position des voitures réelles toutes les 20 secondes
+  updateRealCars(L: any): void {
+    // Mettre à jour la position des voitures réelles et leurs marqueurs
+    this.cars.forEach((car, index) => {
+      // Exemple de mise à jour : déplacement aléatoire pour chaque voiture réelle
+      car.lat += (Math.random() - 0.5) * 0.001; // Déplacement aléatoire sur la latitude
+      car.lon += (Math.random() - 0.5) * 0.001; // Déplacement aléatoire sur la longitude
+
+      // Mise à jour du marqueur pour la voiture réelle
+      const updatedMarker = this.carMarkers[index]; // Récupérer le marqueur de la voiture réelle
+      updatedMarker.setLatLng([car.lat, car.lon]); // Mettre à jour la position du marqueur
+      updatedMarker.getPopup().setContent(`<b>${car.brand} ${car.model}</b><br>Speed: ${car.speed} km/h<br>Plate: ${car.plate}`);
     });
   }
 
