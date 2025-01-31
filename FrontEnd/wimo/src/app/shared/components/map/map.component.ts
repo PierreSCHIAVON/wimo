@@ -11,8 +11,8 @@ import { Car } from "../../services/cars.service";  // Assure-toi d'importer l'i
 })
 export class MapComponent implements AfterViewInit, OnDestroy {
 
-  private map: any; // Déclare une carte de type `any` pour le moment
-  private cars: Car[] = []; // Tableau pour stocker les voitures récupérées du service
+  private map: any;
+  private cars: Car[] = [];
 
   constructor(@Inject(PLATFORM_ID) private platformId: Object, private carsService: CarsService) {}
 
@@ -28,7 +28,6 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
         console.log("Map initialized");
 
-        // Charger les voitures après l'initialisation de la carte
         this.loadCars(L);
       }).catch((error) => {
         console.error("Error loading Leaflet:", error);
